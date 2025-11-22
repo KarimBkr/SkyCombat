@@ -1,0 +1,1009 @@
+<roblox version="4">
+  <Item class="ReplicatedStorage" referent="0">
+    <Properties>
+      <string name="Name">ReplicatedStorage</string>
+    </Properties>
+    <Item class="Folder" referent="1">
+      <Properties>
+        <string name="Name">Modules</string>
+      </Properties>
+      <Item class="Folder" referent="2">
+        <Properties>
+          <string name="Name">Classes</string>
+        </Properties>
+        <Item class="ModuleScript" referent="3">
+          <Properties>
+            <string name="Name">Assault</string>
+            <string name="Source"><![CDATA[local Assault = {}
+Assault.__index = Assault
+
+function Assault.new()
+	local self = setmetatable({}, Assault)
+	self.Name = "Assault"
+	self.Speed = 18
+	self.Health = 150
+	self.Armor = 20
+	self.JetpackMaxFuel = 115
+	self.JetpackRechargeRate = 12
+	self.JetpackThrust = 6000
+	self.JetpackUpwardSpeed = 72
+	return self
+end
+
+function Assault:OnSpawn(character)
+	local humanoid = character:FindFirstChild("Humanoid")
+	if humanoid then
+		humanoid.WalkSpeed = self.Speed
+		humanoid.MaxHealth = self.Health
+		humanoid.Health = self.Health
+	end
+end
+
+return Assault
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="4">
+          <Properties>
+            <string name="Name">Heavy</string>
+            <string name="Source"><![CDATA[local Heavy = {}
+Heavy.__index = Heavy
+
+function Heavy.new()
+	local self = setmetatable({}, Heavy)
+	self.Name = "Heavy"
+	self.Speed = 14
+	self.Health = 230
+	self.Armor = 55
+	self.JetpackMaxFuel = 85
+	self.JetpackRechargeRate = 7
+	self.JetpackThrust = 4800
+	self.JetpackUpwardSpeed = 60
+	return self
+end
+
+function Heavy:OnSpawn(character)
+	local humanoid = character:FindFirstChild("Humanoid")
+	if humanoid then
+		humanoid.WalkSpeed = self.Speed
+		humanoid.MaxHealth = self.Health
+		humanoid.Health = self.Health
+	end
+end
+
+return Heavy
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="5">
+          <Properties>
+            <string name="Name">Scout</string>
+            <string name="Source"><![CDATA[local Scout = {}
+Scout.__index = Scout
+
+function Scout.new()
+	local self = setmetatable({}, Scout)
+	self.Name = "Scout"
+	self.Speed = 26
+	self.Health = 90
+	self.Armor = 0
+	self.JetpackMaxFuel = 140
+	self.JetpackRechargeRate = 20
+	self.JetpackThrust = 5200
+	self.JetpackUpwardSpeed = 78
+	return self
+end
+
+function Scout:OnSpawn(character)
+	local humanoid = character:FindFirstChild("Humanoid")
+	if humanoid then
+		humanoid.WalkSpeed = self.Speed
+		humanoid.MaxHealth = self.Health
+		humanoid.Health = self.Health
+	end
+end
+
+return Scout
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="ModuleScript" referent="6">
+          <Properties>
+            <string name="Name">Support</string>
+            <string name="Source"><![CDATA[local Support = {}
+Support.__index = Support
+
+function Support.new()
+	local self = setmetatable({}, Support)
+	self.Name = "Support"
+	self.Speed = 17
+	self.Health = 125
+	self.Armor = 10
+	self.JetpackMaxFuel = 120
+	self.JetpackRechargeRate = 16
+	self.JetpackThrust = 5400
+	self.JetpackUpwardSpeed = 68
+	return self
+end
+
+function Support:OnSpawn(character)
+	local humanoid = character:FindFirstChild("Humanoid")
+	if humanoid then
+		humanoid.WalkSpeed = self.Speed
+		humanoid.MaxHealth = self.Health
+		humanoid.Health = self.Health
+	end
+end
+
+return Support
+]]></string>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Folder" referent="7">
+        <Properties>
+          <string name="Name">Map</string>
+        </Properties>
+        <Item class="ModuleScript" referent="8">
+          <Properties>
+            <string name="Name">TerrainGenerator</string>
+            <string name="Source"><![CDATA[local TerrainGenerator = {}
+
+function TerrainGenerator.GenerateMap()
+    print("[Server] Generating map...")
+
+    local mapFolder = workspace:FindFirstChild("GeneratedMap")
+    if mapFolder then mapFolder:Destroy() end
+
+    mapFolder = Instance.new("Folder")
+    mapFolder.Name = "GeneratedMap"
+    mapFolder.Parent = workspace
+
+    local base = Instance.new("Part")
+    base.Name = "Baseplate"
+    base.Size = Vector3.new(500, 5, 500)
+    base.Position = Vector3.new(0, -2.5, 0)
+    base.Anchored = true
+    base.Color = Color3.fromRGB(50, 150, 50)
+    base.Parent = mapFolder
+
+    print("[Server] Baseplate generated!")
+end
+
+return TerrainGenerator
+]]></string>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Folder" referent="9">
+        <Properties>
+          <string name="Name">Movement</string>
+        </Properties>
+        <Item class="ModuleScript" referent="10">
+          <Properties>
+            <string name="Name">JetpackController</string>
+            <string name="Source"><![CDATA[local ContextActionService = game:GetService("ContextActionService")
+local RunService = game:GetService("RunService")
+
+local JetpackController = {}
+JetpackController.__index = JetpackController
+
+function JetpackController.new(character, classStats)
+	local self = setmetatable({}, JetpackController)
+
+	self.Character = character
+	self.Humanoid = character:WaitForChild("Humanoid")
+	self.RootPart = character:WaitForChild("HumanoidRootPart")
+	self.ClassStats = classStats or {}
+
+	self.MaxFuel = self.ClassStats.JetpackMaxFuel or self.ClassStats.JetpackFuel or 100
+	self.Fuel = self.MaxFuel
+	self.RechargeRate = self.ClassStats.JetpackRechargeRate or 10
+	self.Thrust = self.ClassStats.JetpackThrust or 8000
+	self.UpwardSpeed = self.ClassStats.JetpackUpwardSpeed or 60
+
+	self.IsActive = false
+
+	self:_setupPhysics()
+	self:_setupInput()
+	self:_setupVisuals()
+
+	self._conn = RunService.Heartbeat:Connect(function(dt)
+		self:_update(dt)
+	end)
+
+	return self
+end
+
+function JetpackController:_setupPhysics()
+	local rootAttachment = self.RootPart:FindFirstChild("RootAttachment")
+	if not rootAttachment then
+		rootAttachment = Instance.new("Attachment")
+		rootAttachment.Name = "RootAttachment"
+		rootAttachment.Parent = self.RootPart
+	end
+
+	local lv = Instance.new("LinearVelocity")
+	lv.Name = "JetpackLV"
+	lv.Attachment0 = rootAttachment
+	lv.RelativeTo = Enum.ActuatorRelativeTo.World
+	lv.VectorVelocity = Vector3.zero
+
+	lv.ForceLimitMode = Enum.ForceLimitMode.Magnitude
+	lv.ForceLimitsEnabled = true
+	lv.MaxForce = 0
+
+	lv.Parent = self.RootPart
+
+	self.LinearVelocity = lv
+end
+
+function JetpackController:_setupInput()
+	local function handler(_, state)
+		if state == Enum.UserInputState.Begin then
+			self.IsActive = true
+		elseif state == Enum.UserInputState.End then
+			self.IsActive = false
+		end
+		return Enum.ContextActionResult.Pass
+	end
+
+	ContextActionService:BindAction("JetpackThrust", handler, true, Enum.KeyCode.Space)
+end
+
+function JetpackController:_setupVisuals()
+	local trail = Instance.new("Trail")
+	trail.Color = ColorSequence.new(Color3.fromRGB(255, 200, 0))
+	trail.Lifetime = 0.3
+	trail.Enabled = false
+
+	local a1 = Instance.new("Attachment")
+	a1.Position = Vector3.new(0.5, -1, 0)
+	a1.Parent = self.RootPart
+
+	local a2 = Instance.new("Attachment")
+	a2.Position = Vector3.new(-0.5, -1, 0)
+	a2.Parent = self.RootPart
+
+	trail.Attachment0 = a1
+	trail.Attachment1 = a2
+	trail.Parent = self.RootPart
+
+	self.Trail = trail
+end
+
+function JetpackController:_update(dt)
+	if not self.Character or not self.Character.Parent then
+		self:Destroy()
+		return
+	end
+
+	if self.IsActive and self.Fuel > 0 then
+		self.LinearVelocity.MaxForce = self.Thrust
+		self.LinearVelocity.VectorVelocity = Vector3.new(0, self.UpwardSpeed, 0)
+
+		self.Fuel = math.max(0, self.Fuel - (20 * dt))
+		self.Trail.Enabled = true
+	else
+		self.LinearVelocity.MaxForce = 0
+		self.LinearVelocity.VectorVelocity = Vector3.zero
+
+		if self.Humanoid.FloorMaterial ~= Enum.Material.Air then
+			self.Fuel = math.min(self.MaxFuel, self.Fuel + (self.RechargeRate * dt))
+		end
+
+		self.Trail.Enabled = false
+	end
+end
+
+function JetpackController:Destroy()
+	if self._conn then self._conn:Disconnect() end
+	ContextActionService:UnbindAction("JetpackThrust")
+	if self.LinearVelocity then self.LinearVelocity:Destroy() end
+	if self.Trail then self.Trail:Destroy() end
+end
+
+return JetpackController
+]]></string>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Folder" referent="11">
+        <Properties>
+          <string name="Name">UI</string>
+        </Properties>
+        <Item class="ModuleScript" referent="12">
+          <Properties>
+            <string name="Name">ClassSelectUI</string>
+            <string name="Source"><![CDATA[local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+
+local ClassSelectUI = {}
+
+local Modules = ReplicatedStorage:WaitForChild("Modules")
+local ClassesFolder = Modules:WaitForChild("Classes")
+
+local CLASS_MODULES = {
+	Scout = require(ClassesFolder:WaitForChild("Scout")),
+	Assault = require(ClassesFolder:WaitForChild("Assault")),
+	Heavy = require(ClassesFolder:WaitForChild("Heavy")),
+	Support = require(ClassesFolder:WaitForChild("Support")),
+}
+
+local ORDER = {"Scout","Assault","Heavy","Support"}
+
+local function getEvents()
+	local folder = ReplicatedStorage:FindFirstChild("ClientEvents")
+	if not folder then
+		folder = Instance.new("Folder")
+		folder.Name = "ClientEvents"
+		folder.Parent = ReplicatedStorage
+	end
+
+	local classChanged = folder:FindFirstChild("ClassChanged")
+	if not classChanged then
+		classChanged = Instance.new("BindableEvent")
+		classChanged.Name = "ClassChanged"
+		classChanged.Parent = folder
+	end
+
+	return classChanged
+end
+
+function ClassSelectUI.Show()
+	if ClassSelectUI.Gui then return end
+
+	local player = Players.LocalPlayer
+	local playerGui = player:WaitForChild("PlayerGui")
+
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "ClassSelectionUI"
+	screenGui.ResetOnSpawn = false
+	screenGui.IgnoreGuiInset = true
+	screenGui.DisplayOrder = 50
+	screenGui.Parent = playerGui
+
+	local frame = Instance.new("Frame")
+	frame.AnchorPoint = Vector2.new(0.5, 0.5)
+	frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	frame.Size = UDim2.new(0, 650, 0, 360)
+	frame.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
+	frame.BorderSizePixel = 0
+	frame.Parent = screenGui
+
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, 0, 0, 54)
+	title.BackgroundTransparency = 1
+	title.Text = "SELECT YOUR CLASS"
+	title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	title.Font = Enum.Font.GothamBold
+	title.TextSize = 30
+	title.Parent = frame
+
+	local closeBtn = Instance.new("TextButton")
+	closeBtn.Size = UDim2.new(0, 36, 0, 36)
+	closeBtn.Position = UDim2.new(1, -44, 0, 8)
+	closeBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+	closeBtn.TextColor3 = Color3.new(1,1,1)
+	closeBtn.Font = Enum.Font.GothamBold
+	closeBtn.TextSize = 20
+	closeBtn.Text = "X"
+	closeBtn.Parent = frame
+	closeBtn.MouseButton1Click:Connect(function()
+		ClassSelectUI.Hide()
+	end)
+
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(1, 0, 1, -60)
+	container.Position = UDim2.new(0, 0, 0, 60)
+	container.BackgroundTransparency = 1
+	container.Parent = frame
+
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Horizontal
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.VerticalAlignment = Enum.VerticalAlignment.Center
+	layout.Padding = UDim.new(0.02, 0)
+	layout.Parent = container
+
+	for _, className in ipairs(ORDER) do
+		local mod = CLASS_MODULES[className]
+		local statsObj = mod.new()
+
+		local hp = statsObj.Health or 0
+		local spd = statsObj.Speed or 0
+		local armor = statsObj.Armor or 0
+		local fuel = statsObj.JetpackMaxFuel or statsObj.JetpackFuel or 0
+		local recharge = statsObj.JetpackRechargeRate or 0
+
+		local button = Instance.new("TextButton")
+		button.Name = className
+		button.Size = UDim2.new(0.22, 0, 0.8, 0)
+		button.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+		button.BorderSizePixel = 0
+		button.Text = ""
+		button.Parent = container
+
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Size = UDim2.new(1, 0, 0.22, 0)
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Text = className
+		nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		nameLabel.Font = Enum.Font.GothamBold
+		nameLabel.TextSize = 22
+		nameLabel.Parent = button
+
+		local statsLabel = Instance.new("TextLabel")
+		statsLabel.Size = UDim2.new(0.9, 0, 0.7, 0)
+		statsLabel.Position = UDim2.new(0.05, 0, 0.25, 0)
+		statsLabel.BackgroundTransparency = 1
+		statsLabel.Text = string.format(
+			"HP: %d\nSpeed: %d\nArmor: %d\nFuel: %d\nRecharge: %d/s",
+			hp, spd, armor, fuel, recharge
+		)
+		statsLabel.TextColor3 = Color3.fromRGB(210, 210, 210)
+		statsLabel.Font = Enum.Font.Gotham
+		statsLabel.TextSize = 14
+		statsLabel.TextYAlignment = Enum.TextYAlignment.Top
+		statsLabel.Parent = button
+
+		button.MouseButton1Click:Connect(function()
+			local classChangedEvent = getEvents()
+			classChangedEvent:Fire(className)
+			ClassSelectUI.Hide()
+		end)
+	end
+
+	ClassSelectUI.Gui = screenGui
+end
+
+function ClassSelectUI.Hide()
+	if ClassSelectUI.Gui then
+		ClassSelectUI.Gui:Destroy()
+		ClassSelectUI.Gui = nil
+	end
+end
+
+return ClassSelectUI
+]]></string>
+          </Properties>
+        </Item>
+      </Item>
+    </Item>
+    <Item class="Folder" referent="13">
+      <Properties>
+        <string name="Name">Shared</string>
+      </Properties>
+      <Item class="ModuleScript" referent="14">
+        <Properties>
+          <string name="Name">Constants</string>
+          <string name="Source"><![CDATA[local Constants = {
+	MAX_PLAYERS = 20,
+	JETPACK_MAX_FUEL = 100,
+	TEAMS = {
+		RED = "Red",
+		BLUE = "Blue"
+	}
+}
+
+return Constants
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="15">
+        <Properties>
+          <string name="Name">Events</string>
+          <string name="Source"><![CDATA[local Events = {
+	-- List of RemoteEvent names to be created/used
+	ACTIVATE_JETPACK = "ActivateJetpack",
+	CLASS_SELECTED = "ClassSelected",
+	MATCH_STARTED = "MatchStarted",
+	UPDATE_FUEL = "UpdateFuel"
+}
+
+return Events
+]]></string>
+        </Properties>
+      </Item>
+    </Item>
+  </Item>
+  <Item class="ServerScriptService" referent="16">
+    <Properties>
+      <string name="Name">ServerScriptService</string>
+    </Properties>
+    <Item class="Script" referent="17">
+      <Properties>
+        <string name="Name">ClassService</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
+local Players = game:GetService("Players")
+
+-- Setup RemoteEvents
+local remoteFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+if not remoteFolder then
+	remoteFolder = Instance.new("Folder")
+	remoteFolder.Name = "RemoteEvents"
+	remoteFolder.Parent = ReplicatedStorage
+end
+
+local function getRemote(name)
+	local remote = remoteFolder:FindFirstChild(name)
+	if not remote then
+		remote = Instance.new("RemoteEvent")
+		remote.Name = name
+		remote.Parent = remoteFolder
+	end
+	return remote
+end
+
+local RequestClassChange = getRemote("RequestClassChange")
+local ClassApplied = getRemote("ClassApplied")
+local FuelUpdate = getRemote("FuelUpdate")
+
+-- Load Classes
+local Modules = ReplicatedStorage:WaitForChild("Modules")
+local ClassesFolder = Modules:WaitForChild("Classes")
+
+local CLASSES = {
+	Scout = require(ClassesFolder.Scout),
+	Assault = require(ClassesFolder.Assault),
+	Heavy = require(ClassesFolder.Heavy),
+	Support = require(ClassesFolder.Support),
+}
+
+-- Helper to apply class
+local function applyClassToPlayer(player, className)
+	local classModule = CLASSES[className]
+	if not classModule then
+		warn("Invalid class requested: " .. tostring(className))
+		return
+	end
+	
+	-- Store selection
+	player:SetAttribute("Class", className)
+	
+	local character = player.Character
+	if character then
+		local humanoid = character:FindFirstChild("Humanoid")
+		if humanoid then
+			-- Create instance to get stats
+			local classInstance = classModule.new()
+			
+			-- Apply Server-Side Stats
+			humanoid.WalkSpeed = classInstance.Speed
+			humanoid.MaxHealth = classInstance.Health
+			humanoid.Health = classInstance.Health
+			
+			-- Prepare stats for client
+			local stats = {
+				Name = classInstance.Name,
+				Speed = classInstance.Speed,
+				Health = classInstance.Health,
+				Armor = classInstance.Armor,
+				JetpackMaxFuel = classInstance.JetpackMaxFuel,
+				JetpackRechargeRate = classInstance.JetpackRechargeRate,
+				JetpackThrust = classInstance.JetpackThrust,
+				JetpackUpwardSpeed = classInstance.JetpackUpwardSpeed
+			}
+			
+			-- Notify Client
+			ClassApplied:FireClient(player, className, stats)
+			print(string.format("[Server] Applied %s to %s", className, player.Name))
+		end
+	end
+end
+
+-- Event Listeners
+RequestClassChange.OnServerEvent:Connect(function(player, className)
+	if CLASSES[className] then
+		applyClassToPlayer(player, className)
+	end
+end)
+
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function(character)
+		-- Wait for humanoid
+		character:WaitForChild("Humanoid")
+		
+		-- Check if player already selected a class, otherwise default to Scout
+		local currentClass = player:GetAttribute("Class") or "Scout"
+		
+		-- Apply (with a small delay to ensure client is ready listening)
+		task.spawn(function()
+			task.wait(0.1)
+			applyClassToPlayer(player, currentClass)
+		end)
+	end)
+end)
+
+return {}
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="18">
+      <Properties>
+        <string name="Name">GameManager</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[local GameManager = {}
+
+-- Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Modules
+-- local Matchmaker = require(script.Parent.Matchmaker)
+
+function GameManager.Init()
+	print("GameManager Initialized")
+	
+	Players.PlayerAdded:Connect(function(player)
+		print(player.Name .. " joined the game")
+		-- Assign team, wait for class selection
+	end)
+end
+
+function GameManager.StartMatch()
+	print("Match Started")
+end
+
+function GameManager.EndMatch()
+	print("Match Ended")
+end
+
+GameManager.Init()
+
+return GameManager
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="19">
+      <Properties>
+        <string name="Name">MapLoader</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Attend que le dossier Modules et Map soient bien créés
+local Modules = ReplicatedStorage:WaitForChild("Modules")
+local MapFolder = Modules:WaitForChild("Map")
+local TerrainGenerator = require(MapFolder:WaitForChild("TerrainGenerator"))
+
+print("[Server] Generating map...")
+TerrainGenerator.GenerateMap()
+print("[Server] Map generation complete.")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="20">
+      <Properties>
+        <string name="Name">Matchmaker</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[local Matchmaker = {}
+
+function Matchmaker.FindMatch(player)
+	print("Finding match for " .. player.Name)
+	-- Logic to find available server or queue
+end
+
+function Matchmaker.BalanceTeams()
+	print("Balancing teams...")
+end
+
+return Matchmaker
+]]></string>
+      </Properties>
+    </Item>
+  </Item>
+  <Item class="StarterGui" referent="21">
+    <Properties>
+      <string name="Name">StarterGui</string>
+    </Properties>
+    <Item class="ModuleScript" referent="22">
+      <Properties>
+        <string name="Name">ClassSelection</string>
+        <string name="Source"><![CDATA[local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local M = {}
+
+local function getEvents()
+	local folder = ReplicatedStorage:FindFirstChild("ClientEvents")
+	if not folder then
+		folder = Instance.new("Folder")
+		folder.Name = "ClientEvents"
+		folder.Parent = ReplicatedStorage
+	end
+
+	local classChanged = folder:FindFirstChild("ClassChanged")
+	if not classChanged then
+		classChanged = Instance.new("BindableEvent")
+		classChanged.Name = "ClassChanged"
+		classChanged.Parent = folder
+	end
+
+	local fuelChanged = folder:FindFirstChild("FuelChanged")
+	if not fuelChanged then
+		fuelChanged = Instance.new("BindableEvent")
+		fuelChanged.Name = "FuelChanged"
+		fuelChanged.Parent = folder
+	end
+
+	return classChanged, fuelChanged
+end
+
+local gui, fuelFill, classText
+local fuelConn, inputConn
+
+local function createUI()
+	local player = Players.LocalPlayer
+	local playerGui = player:WaitForChild("PlayerGui")
+
+	gui = Instance.new("ScreenGui")
+	gui.Name = "SkyCombatHUD"
+	gui.ResetOnSpawn = false
+	gui.IgnoreGuiInset = true
+	gui.DisplayOrder = 10
+	gui.Parent = playerGui
+
+	local box = Instance.new("Frame")
+	box.AnchorPoint = Vector2.new(0.5, 0)
+	box.Position = UDim2.new(0.5, 0, 0, 16)
+	box.Size = UDim2.new(0, 520, 0, 64)
+	box.BackgroundTransparency = 0.25
+	box.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	box.BorderSizePixel = 0
+	box.Parent = gui
+
+	local title = Instance.new("TextLabel")
+	title.BackgroundTransparency = 1
+	title.Size = UDim2.new(1, -24, 0, 28)
+	title.Position = UDim2.new(0, 12, 0, 4)
+	title.Font = Enum.Font.GothamBold
+	title.TextSize = 20
+	title.TextColor3 = Color3.fromRGB(255,255,255)
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.Text = "Espace: Jetpack  |  C: Changer de classe"
+	title.Parent = box
+
+	classText = Instance.new("TextLabel")
+	classText.BackgroundTransparency = 1
+	classText.Size = UDim2.new(1, -24, 0, 24)
+	classText.Position = UDim2.new(0, 12, 0, 36)
+	classText.Font = Enum.Font.Gotham
+	classText.TextSize = 18
+	classText.TextColor3 = Color3.fromRGB(180, 230, 255)
+	classText.TextXAlignment = Enum.TextXAlignment.Left
+	classText.Text = "Classe actuelle : …"
+	classText.Parent = box
+
+	local fuelFrame = Instance.new("Frame")
+	fuelFrame.AnchorPoint = Vector2.new(0.5, 1)
+	fuelFrame.Position = UDim2.new(0.5, 0, 1, -30)
+	fuelFrame.Size = UDim2.new(0, 480, 0, 16)
+	fuelFrame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	fuelFrame.BackgroundTransparency = 0.2
+	fuelFrame.BorderSizePixel = 0
+	fuelFrame.Parent = gui
+
+	local bg = Instance.new("Frame")
+	bg.Size = UDim2.new(1, -4, 1, -4)
+	bg.Position = UDim2.new(0, 2, 0, 2)
+	bg.BackgroundColor3 = Color3.fromRGB(15,15,15)
+	bg.BorderSizePixel = 0
+	bg.Parent = fuelFrame
+
+	fuelFill = Instance.new("Frame")
+	fuelFill.Size = UDim2.new(1, 0, 1, 0)
+	fuelFill.BackgroundColor3 = Color3.fromRGB(0,170,255)
+	fuelFill.BorderSizePixel = 0
+	fuelFill.Parent = bg
+
+	local Modules = ReplicatedStorage:WaitForChild("Modules")
+	local UI = Modules:WaitForChild("UI")
+	local ClassUI = require(UI:WaitForChild("ClassSelectUI"))
+
+	local changeBtn = Instance.new("TextButton")
+	changeBtn.Size = UDim2.new(0, 160, 0, 28)
+	changeBtn.Position = UDim2.new(1, -170, 0, 18)
+	changeBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+	changeBtn.TextColor3 = Color3.new(1,1,1)
+	changeBtn.Font = Enum.Font.GothamBold
+	changeBtn.TextSize = 14
+	changeBtn.Text = "Change Class (C)"
+	changeBtn.Parent = gui
+
+	changeBtn.MouseButton1Click:Connect(function()
+		ClassUI.Show()
+	end)
+
+	if inputConn then inputConn:Disconnect() end
+	inputConn = UserInputService.InputBegan:Connect(function(input, gpe)
+		if gpe then return end
+		if input.KeyCode == Enum.KeyCode.C then
+			ClassUI.Show()
+		end
+	end)
+end
+
+function M.Show()
+	if not gui then
+		createUI()
+	end
+
+	local _, fuelChanged = getEvents()
+
+	if fuelConn then fuelConn:Disconnect() end
+	fuelConn = fuelChanged.Event:Connect(function(percent, className)
+		if fuelFill then
+			local p = math.clamp(percent or 0, 0, 1)
+			fuelFill.Size = UDim2.new(p, 0, 1, 0)
+		end
+		if classText and className then
+			classText.Text = ("Classe actuelle : %s"):format(className)
+		end
+	end)
+end
+
+function M.Hide()
+	if fuelConn then fuelConn:Disconnect() end
+	if inputConn then inputConn:Disconnect() end
+	if gui then
+		gui:Destroy()
+		gui = nil
+		fuelFill = nil
+		classText = nil
+	end
+end
+
+return M
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="ModuleScript" referent="23">
+      <Properties>
+        <string name="Name">MainMenu</string>
+        <string name="Source"><![CDATA[local MainMenu = {}
+
+function MainMenu.Show()
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MainMenu"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = playerGui
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 100)
+title.Position = UDim2.new(0, 0, 0, 50)
+title.Text = "?? SkyCombat"
+title.TextScaled = true
+title.Font = Enum.Font.FredokaOne
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.BackgroundTransparency = 1
+title.Parent = screenGui
+
+local playButton = Instance.new("TextButton")
+playButton.Size = UDim2.new(0, 300, 0, 80)
+playButton.Position = UDim2.new(0.5, -150, 0.5, -40)
+playButton.Text = "PLAY"
+playButton.TextScaled = true
+playButton.Font = Enum.Font.FredokaOne
+playButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+playButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+playButton.Parent = screenGui
+
+playButton.MouseButton1Click:Connect(function()
+print("Play clicked")
+playButton.Text = "Loading..."
+task.wait(0.5)
+MainMenu.Hide()
+end)
+end
+
+function MainMenu.Hide()
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local mainMenu = playerGui:FindFirstChild("MainMenu")
+if mainMenu then mainMenu:Destroy() end
+end
+
+return MainMenu
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="LocalScript" referent="24">
+      <Properties>
+        <string name="Name">UILoader</string>
+        <string name="Source"><![CDATA[local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local parentGui = script.Parent
+local hudModule = parentGui:FindFirstChild("ClassSelection") or parentGui:FindFirstChild("ClassSelection.screen")
+if not hudModule then
+	hudModule = parentGui:WaitForChild("ClassSelection.screen")
+end
+
+local HUD = require(hudModule)
+
+local Modules = ReplicatedStorage:WaitForChild("Modules")
+local UI = Modules:WaitForChild("UI")
+local ClassUI = require(UI:WaitForChild("ClassSelectUI"))
+
+print("[Client] UILoader starting...")
+HUD.Show()
+ClassUI.Show()
+]]></string>
+      </Properties>
+    </Item>
+  </Item>
+  <Item class="StarterPlayer" referent="25">
+    <Properties>
+      <string name="Name">StarterPlayer</string>
+    </Properties>
+    <Item class="StarterPlayerScripts" referent="26">
+      <Properties>
+        <string name="Name">StarterPlayerScripts</string>
+      </Properties>
+      <Item class="LocalScript" referent="27">
+        <Properties>
+          <string name="Name">PlayerController</string>
+          <string name="Source"><![CDATA[local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+-- Folders
+local remoteFolder = ReplicatedStorage:WaitForChild("RemoteEvents")
+local RequestClassChange = remoteFolder:WaitForChild("RequestClassChange")
+local ClassApplied = remoteFolder:WaitForChild("ClassApplied")
+local FuelUpdate = remoteFolder:WaitForChild("FuelUpdate")
+
+local clientEvents = ReplicatedStorage:WaitForChild("ClientEvents")
+local classChangedBindable = clientEvents:WaitForChild("ClassChanged")
+local fuelChangedBindable = clientEvents:WaitForChild("FuelChanged")
+
+local Modules = ReplicatedStorage:WaitForChild("Modules")
+local MovementFolder = Modules:WaitForChild("Movement")
+local JetpackController = require(MovementFolder:WaitForChild("JetpackController"))
+
+-- State
+local player = Players.LocalPlayer
+local jetpack = nil
+local currentClassName = "Scout"
+
+-- Listen for UI requests (Bindable) and forward to Server
+classChangedBindable.Event:Connect(function(className)
+	print("[Client] Requesting class: " .. className)
+	RequestClassChange:FireServer(className)
+end)
+
+-- Listen for Server confirmation
+ClassApplied.OnClientEvent:Connect(function(className, stats)
+	print("[Client] Class applied: " .. className)
+	currentClassName = className
+	
+	local character = player.Character
+	if character then
+		-- Re-create Jetpack with server-provided stats
+		if jetpack then jetpack:Destroy() end
+		jetpack = JetpackController.new(character, stats)
+		
+		-- Update HUD immediately
+		fuelChangedBindable:Fire(1, currentClassName)
+	end
+end)
+
+-- Update Fuel HUD loop
+RunService.Heartbeat:Connect(function()
+	if jetpack and jetpack.MaxFuel and jetpack.MaxFuel > 0 then
+		local pct = (jetpack.Fuel or 0) / jetpack.MaxFuel
+		fuelChangedBindable:Fire(pct, currentClassName)
+	end
+end)
+]]></string>
+        </Properties>
+      </Item>
+    </Item>
+  </Item>
+</roblox>
