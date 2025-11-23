@@ -23,13 +23,32 @@ local ClassApplied = getRemote("ClassApplied")
 
 local Modules = ReplicatedStorage:WaitForChild("Modules")
 local ClassesFolder = Modules:WaitForChild("Classes")
+local SharedFolder = Modules:WaitForChild("Shared")
+local ClassCosmetics = require(SharedFolder:WaitForChild("ClassCosmetics"))
 
 local CLASSES = {
-	Scout = require(ClassesFolder.Scout),
-	Assault = require(ClassesFolder.Assault),
-	Heavy = require(ClassesFolder.Heavy),
-	Support = require(ClassesFolder.Support),
+	Scout = require(ClassesFolder:WaitForChild("Scout")),
+	Assault = require(ClassesFolder:WaitForChild("Assault")),
+	Heavy = require(ClassesFolder:WaitForChild("Heavy")),
+	Support = require(ClassesFolder:WaitForChild("Support")),
 }
+
+local function buildStats(classInstance)
+	local stats = {}
+
+	for k, v in pairs(classInstance) do
+		local t = typeof(v)
+		if t == "number" or t == "boolean" or t == "string" then
+			stats[k] = v
+		end
+	end
+
+	if classInstance.Name ~= nil then
+		stats.Name = classInstance.Name
+	end
+
+	return stats
+end
 
 local function applyClassToPlayer(player, className)
 	local classModule = CLASSES[className]
@@ -48,34 +67,17 @@ local function applyClassToPlayer(player, className)
 
 	local classInstance = classModule.new()
 
-	humanoid.WalkSpeed = classInstance.Speed
-	humanoid.MaxHealth = classInstance.Health
-	humanoid.Health = classInstance.Health
+	humanoid.WalkSpeed = classInstance.Speed or humanoid.WalkSpeed
+	humanoid.MaxHealth = classInstance.Health or humanoid.MaxHealth
+	humanoid.Health = classInstance.Health or humanoid.Health
 
-	local stats = {
-		Name = classInstance.Name,
-		Speed = classInstance.Speed,
-		Health = classInstance.Health,
-		Armor = classInstance.Armor,
-
-		JetpackMaxFuel = classInstance.JetpackMaxFuel,
-		JetpackRechargeRate = classInstance.JetpackRechargeRate,
-		FuelBurnRate = classInstance.FuelBurnRate,
-
-		JetpackThrust = classInstance.JetpackThrust,
-		JetpackUpwardSpeed = classInstance.JetpackUpwardSpeed,
-		JetpackUpwardAccel = classInstance.JetpackUpwardAccel,
-		JetpackMaxUpSpeed = classInstance.JetpackMaxUpSpeed,
-		JetpackMaxFallSpeed = classInstance.JetpackMaxFallSpeed,
-
-		AirControl = classInstance.AirControl,
-		AirAcceleration = classInstance.AirAcceleration,
-		AirMaxSpeed = classInstance.AirMaxSpeed,
-		AirDrag = classInstance.AirDrag,
-		VelocityResponse = classInstance.VelocityResponse,
-	}
+	local stats = buildStats(classInstance)
 
 	ClassApplied:FireClient(player, className, stats)
+
+	ClassCosmetics.Apply(className, character)
+
+	print(string.format("[Server] Applied %s to %s", className, player.Name))
 end
 
 RequestClassChange.OnServerEvent:Connect(function(player, className)
@@ -85,10 +87,15 @@ RequestClassChange.OnServerEvent:Connect(function(player, className)
 end)
 
 Players.PlayerAdded:Connect(function(player)
-	player.CharacterAdded:Connect(function()
-		task.wait(0.1)
+	player.CharacterAdded:Connect(function(character)
+		character:WaitForChild("Humanoid")
+
 		local currentClass = player:GetAttribute("Class") or "Scout"
-		applyClassToPlayer(player, currentClass)
+
+		task.spawn(function()
+			task.wait(0.1)
+			applyClassToPlayer(player, currentClass)
+		end)
 	end)
 end)
 
