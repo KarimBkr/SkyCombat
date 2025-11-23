@@ -7,10 +7,17 @@ function Assault.new()
 	self.Speed = 18
 	self.Health = 150
 	self.Armor = 20
-	self.JetpackMaxFuel = 115
+
+	self.JetpackMaxFuel = 110
 	self.JetpackRechargeRate = 12
-	self.JetpackThrust = 6000
-	self.JetpackUpwardSpeed = 72
+	self.FuelBurnRate = 20
+
+	self.JetpackThrust = 6400
+	self.JetpackUpwardSpeed = 70
+
+	self.AirControl = 0.75
+	self.AirAcceleration = 90
+
 	return self
 end
 

@@ -13,7 +13,7 @@ local CLASS_MODULES = {
 	Support = require(ClassesFolder:WaitForChild("Support")),
 }
 
-local ORDER = {"Scout","Assault","Heavy","Support"}
+local ORDER = { "Scout", "Assault", "Heavy", "Support" }
 
 local function getEvents()
 	local folder = ReplicatedStorage:FindFirstChild("ClientEvents")
@@ -34,10 +34,13 @@ local function getEvents()
 end
 
 function ClassSelectUI.Show()
-	if ClassSelectUI.Gui then return end
-
 	local player = Players.LocalPlayer
 	local playerGui = player:WaitForChild("PlayerGui")
+
+	-- Si déjà ouvert, on ne recrée pas
+	if playerGui:FindFirstChild("ClassSelectionUI") then
+		return
+	end
 
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "ClassSelectionUI"
@@ -66,8 +69,8 @@ function ClassSelectUI.Show()
 	local closeBtn = Instance.new("TextButton")
 	closeBtn.Size = UDim2.new(0, 36, 0, 36)
 	closeBtn.Position = UDim2.new(1, -44, 0, 8)
-	closeBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-	closeBtn.TextColor3 = Color3.new(1,1,1)
+	closeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	closeBtn.TextColor3 = Color3.new(1, 1, 1)
 	closeBtn.Font = Enum.Font.GothamBold
 	closeBtn.TextSize = 20
 	closeBtn.Text = "X"

@@ -14,12 +14,15 @@ function JetpackController.new(character, classStats)
 
 	self.MaxFuel = self.ClassStats.JetpackMaxFuel or self.ClassStats.JetpackFuel or 100
 	self.Fuel = self.MaxFuel
+	self.BurnRate = self.ClassStats.JetpackBurnRate or 10
 	self.RechargeRate = self.ClassStats.JetpackRechargeRate or 10
-	self.Thrust = self.ClassStats.JetpackThrust or 8000
-	self.UpwardSpeed = self.ClassStats.JetpackUpwardSpeed or 60
-	
-	self.AirControl = self.ClassStats.AirControl or 0.6
-	self.AirAcceleration = self.ClassStats.AirAcceleration or 80
+
+	self.Thrust = self.ClassStats.JetpackThrust or 9000
+	self.VerticalAccel = self.ClassStats.JetpackAccel or 200
+	self.MaxUpSpeed = self.ClassStats.JetpackMaxUpSpeed or self.ClassStats.JetpackUpwardSpeed or 95
+
+	self.AirControl = self.ClassStats.AirControl or 9
+	self.AirAcceleration = self.ClassStats.AirAcceleration or 120
 
 	self.IsActive = false
 
@@ -47,11 +50,9 @@ function JetpackController:_setupPhysics()
 	lv.Attachment0 = rootAttachment
 	lv.RelativeTo = Enum.ActuatorRelativeTo.World
 	lv.VectorVelocity = Vector3.zero
-
 	lv.ForceLimitMode = Enum.ForceLimitMode.Magnitude
 	lv.ForceLimitsEnabled = true
 	lv.MaxForce = 0
-
 	lv.Parent = self.RootPart
 
 	self.LinearVelocity = lv
@@ -73,7 +74,7 @@ end
 function JetpackController:_setupVisuals()
 	local trail = Instance.new("Trail")
 	trail.Color = ColorSequence.new(Color3.fromRGB(255, 200, 0))
-	trail.Lifetime = 0.3
+	trail.Lifetime = 0.25
 	trail.Enabled = false
 
 	local a1 = Instance.new("Attachment")
@@ -100,17 +101,18 @@ function JetpackController:_update(dt)
 	if self.IsActive and self.Fuel > 0 then
 		local moveDir = self.Humanoid.MoveDirection
 		local currentVel = self.RootPart.AssemblyLinearVelocity
-		
-		local horizontalTarget = moveDir * self.AirAcceleration
-		local newHorizontal = Vector3.new(currentVel.X, 0, currentVel.Z):Lerp(horizontalTarget, self.AirControl * dt)
-		
-		local targetY = currentVel.Y + self.UpwardSpeed
-		targetY = math.clamp(targetY, -120, 90)
-		
+
+		local horizontalTarget = Vector3.new(moveDir.X, 0, moveDir.Z) * self.AirAcceleration
+		local alpha = 1 - math.exp(-self.AirControl * dt)
+		local newHorizontal = Vector3.new(currentVel.X, 0, currentVel.Z):Lerp(horizontalTarget, alpha)
+
+		local targetY = currentVel.Y + self.VerticalAccel * dt
+		targetY = math.clamp(targetY, -140, self.MaxUpSpeed)
+
 		self.LinearVelocity.MaxForce = self.Thrust
 		self.LinearVelocity.VectorVelocity = Vector3.new(newHorizontal.X, targetY, newHorizontal.Z)
 
-		self.Fuel = math.max(0, self.Fuel - (20 * dt))
+		self.Fuel = math.max(0, self.Fuel - (self.BurnRate * dt))
 		self.Trail.Enabled = true
 	else
 		self.LinearVelocity.MaxForce = 0

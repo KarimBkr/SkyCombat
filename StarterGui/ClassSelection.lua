@@ -29,7 +29,7 @@ local function getEvents()
 	return classChanged, fuelChanged
 end
 
-local gui, fuelFill, classText
+local gui, fuelFill, classText, fuelNumbers, classNumbers
 local fuelConn, inputConn
 
 local function createUI()
@@ -46,7 +46,7 @@ local function createUI()
 	local box = Instance.new("Frame")
 	box.AnchorPoint = Vector2.new(0.5, 0)
 	box.Position = UDim2.new(0.5, 0, 0, 16)
-	box.Size = UDim2.new(0, 520, 0, 64)
+	box.Size = UDim2.new(0, 560, 0, 86)
 	box.BackgroundTransparency = 0.25
 	box.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	box.BorderSizePixel = 0
@@ -54,10 +54,10 @@ local function createUI()
 
 	local title = Instance.new("TextLabel")
 	title.BackgroundTransparency = 1
-	title.Size = UDim2.new(1, -24, 0, 28)
-	title.Position = UDim2.new(0, 12, 0, 4)
+	title.Size = UDim2.new(1, -24, 0, 26)
+	title.Position = UDim2.new(0, 12, 0, 6)
 	title.Font = Enum.Font.GothamBold
-	title.TextSize = 20
+	title.TextSize = 19
 	title.TextColor3 = Color3.fromRGB(255,255,255)
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Text = "Espace: Jetpack  |  C: Changer de classe"
@@ -65,8 +65,8 @@ local function createUI()
 
 	classText = Instance.new("TextLabel")
 	classText.BackgroundTransparency = 1
-	classText.Size = UDim2.new(1, -24, 0, 24)
-	classText.Position = UDim2.new(0, 12, 0, 36)
+	classText.Size = UDim2.new(1, -24, 0, 22)
+	classText.Position = UDim2.new(0, 12, 0, 34)
 	classText.Font = Enum.Font.Gotham
 	classText.TextSize = 18
 	classText.TextColor3 = Color3.fromRGB(180, 230, 255)
@@ -74,10 +74,21 @@ local function createUI()
 	classText.Text = "Classe actuelle : …"
 	classText.Parent = box
 
+	classNumbers = Instance.new("TextLabel")
+	classNumbers.BackgroundTransparency = 1
+	classNumbers.Size = UDim2.new(1, -24, 0, 18)
+	classNumbers.Position = UDim2.new(0, 12, 0, 58)
+	classNumbers.Font = Enum.Font.Gotham
+	classNumbers.TextSize = 14
+	classNumbers.TextColor3 = Color3.fromRGB(210, 210, 210)
+	classNumbers.TextXAlignment = Enum.TextXAlignment.Left
+	classNumbers.Text = ""
+	classNumbers.Parent = box
+
 	local fuelFrame = Instance.new("Frame")
 	fuelFrame.AnchorPoint = Vector2.new(0.5, 1)
 	fuelFrame.Position = UDim2.new(0.5, 0, 1, -30)
-	fuelFrame.Size = UDim2.new(0, 480, 0, 16)
+	fuelFrame.Size = UDim2.new(0, 520, 0, 18)
 	fuelFrame.BackgroundColor3 = Color3.fromRGB(35,35,35)
 	fuelFrame.BackgroundTransparency = 0.2
 	fuelFrame.BorderSizePixel = 0
@@ -95,6 +106,18 @@ local function createUI()
 	fuelFill.BackgroundColor3 = Color3.fromRGB(0,170,255)
 	fuelFill.BorderSizePixel = 0
 	fuelFill.Parent = bg
+
+	fuelNumbers = Instance.new("TextLabel")
+	fuelNumbers.BackgroundTransparency = 1
+	fuelNumbers.AnchorPoint = Vector2.new(0.5, 1)
+	fuelNumbers.Position = UDim2.new(0.5, 0, 1, -50)
+	fuelNumbers.Size = UDim2.new(0, 520, 0, 20)
+	fuelNumbers.Font = Enum.Font.GothamBold
+	fuelNumbers.TextSize = 15
+	fuelNumbers.TextColor3 = Color3.fromRGB(255,255,255)
+	fuelNumbers.TextXAlignment = Enum.TextXAlignment.Center
+	fuelNumbers.Text = "Fuel: --/--"
+	fuelNumbers.Parent = gui
 
 	local Modules = ReplicatedStorage:WaitForChild("Modules")
 	local UI = Modules:WaitForChild("UI")
@@ -131,13 +154,27 @@ function M.Show()
 	local _, fuelChanged = getEvents()
 
 	if fuelConn then fuelConn:Disconnect() end
-	fuelConn = fuelChanged.Event:Connect(function(percent, className)
+	fuelConn = fuelChanged.Event:Connect(function(percent, className, fuel, maxFuel, burnRate, rechargeRate, airMaxSpeed)
 		if fuelFill then
 			local p = math.clamp(percent or 0, 0, 1)
 			fuelFill.Size = UDim2.new(p, 0, 1, 0)
 		end
+
 		if classText and className then
 			classText.Text = ("Classe actuelle : %s"):format(className)
+		end
+
+		if fuelNumbers then
+			local f = math.floor(fuel or 0)
+			local m = math.floor(maxFuel or 0)
+			fuelNumbers.Text = ("Fuel: %d / %d"):format(f, m)
+		end
+
+		if classNumbers then
+			local b = burnRate and string.format("%.0f", burnRate) or "--"
+			local r = rechargeRate and string.format("%.0f", rechargeRate) or "--"
+			local a = airMaxSpeed and string.format("%.0f", airMaxSpeed) or "--"
+			classNumbers.Text = ("Burn: %s/s   Recharge: %s/s   AirMax: %s"):format(b, r, a)
 		end
 	end)
 end
@@ -150,6 +187,8 @@ function M.Hide()
 		gui = nil
 		fuelFill = nil
 		classText = nil
+		fuelNumbers = nil
+		classNumbers = nil
 	end
 end
 

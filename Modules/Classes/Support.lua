@@ -7,10 +7,17 @@ function Support.new()
 	self.Speed = 17
 	self.Health = 125
 	self.Armor = 10
-	self.JetpackMaxFuel = 120
-	self.JetpackRechargeRate = 16
-	self.JetpackThrust = 5400
-	self.JetpackUpwardSpeed = 68
+
+	self.JetpackMaxFuel = 115
+	self.JetpackRechargeRate = 18
+	self.FuelBurnRate = 19
+
+	self.JetpackThrust = 6000
+	self.JetpackUpwardSpeed = 65
+
+	self.AirControl = 0.7
+	self.AirAcceleration = 85
+
 	return self
 end
 
