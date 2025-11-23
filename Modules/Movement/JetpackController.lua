@@ -17,6 +17,9 @@ function JetpackController.new(character, classStats)
 	self.RechargeRate = self.ClassStats.JetpackRechargeRate or 10
 	self.Thrust = self.ClassStats.JetpackThrust or 8000
 	self.UpwardSpeed = self.ClassStats.JetpackUpwardSpeed or 60
+	
+	self.AirControl = self.ClassStats.AirControl or 0.6
+	self.AirAcceleration = self.ClassStats.AirAcceleration or 80
 
 	self.IsActive = false
 
@@ -95,8 +98,17 @@ function JetpackController:_update(dt)
 	end
 
 	if self.IsActive and self.Fuel > 0 then
+		local moveDir = self.Humanoid.MoveDirection
+		local currentVel = self.RootPart.AssemblyLinearVelocity
+		
+		local horizontalTarget = moveDir * self.AirAcceleration
+		local newHorizontal = Vector3.new(currentVel.X, 0, currentVel.Z):Lerp(horizontalTarget, self.AirControl * dt)
+		
+		local targetY = currentVel.Y + self.UpwardSpeed
+		targetY = math.clamp(targetY, -120, 90)
+		
 		self.LinearVelocity.MaxForce = self.Thrust
-		self.LinearVelocity.VectorVelocity = Vector3.new(0, self.UpwardSpeed, 0)
+		self.LinearVelocity.VectorVelocity = Vector3.new(newHorizontal.X, targetY, newHorizontal.Z)
 
 		self.Fuel = math.max(0, self.Fuel - (20 * dt))
 		self.Trail.Enabled = true
